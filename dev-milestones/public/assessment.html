@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P.A.T.-C.W.C.P.</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.3.0/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #FFFAE6;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            background-color: #FFFAE6;
+        }
+
+        h1 {
+            text-align: center;
+            color: #FF0000;
+        }
+
+        .form-group, .activity-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #000000;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .activity-group label {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .dashboard {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #FFF;
+        }
+
+        .chart-container {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>P.A.T.-C.W.C.P.</h1>
+
+        <div class="form-group">
+            <label for="childName">Child Name:</label>
+            <input type="text" id="childName" name="childName" required>
+        </div>
+
+        <div class="form-group">
+            <label for="dob">D.O.B.:</label>
+            <input type="date" id="dob" name="dob" required>
+        </div>
+
+        <div class="form-group">
+            <label for="assessmentDate">Assessment Date:</label>
+            <input type="date" id="assessmentDate" name="assessmentDate" required>
+        </div>
+
+        <div class="form-group">
+            <label for="evaluatorName">Evaluator's Name:</label>
+            <input type="text" id="evaluatorName" name="evaluatorName" required>
+        </div>
+
+        <div class="form-group">
+            <label for="childAge">Child's Age:</label>
+            <input type="number" id="childAge" name="childAge" min="4" max="8" required>
+        </div>
+
+        <div class="activity-group">
+            <h2>Activities</h2>
+
+            <!-- Dynamically Generated Activities -->
+            <div id="activities"></div>
+        </div>
+
+        <div class="dashboard">
+            <h3>Score Dashboard</h3>
+            <p id="score">Current Score: 0</p>
+            <p id="percentage">Percentage: 0%</p>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="percentageChart"></canvas>
+        </div>
+
+        <div class="buttons">
+            <button id="saveAssessmentBtn">Save Assessment</button>
+            <button id="exportPdfBtn">Export to PDF</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize activities
+        const activities = [
+            "Can the child recognize shapes (circle, square, triangle)?",
+            "Can the child identify primary colors (red, blue, yellow)?",
+            "Can the child count from 1 to 10?",
+            "Can the child follow simple instructions (e.g., 'Pick up the ball')?",
+            "Can the child dress independently?",
+            "Can the child tie their shoelaces?",
+            "Can the child identify family members by name?",
+            "Can the child hold a pencil correctly?",
+            "Can the child distinguish between left and right?",
+            "Can the child complete a simple puzzle?",
+            "Can the child use scissors to cut along a line?",
+            "Can the child recite their full name and age?",
+            "Can the child read simple words or sentences?",
+            "Can the child identify animals by their names?",
+            "Can the child perform basic hygiene tasks (e.g., washing hands)?",
+            "Can the child run and jump without losing balance?",
+            "Can the child share toys with peers during playtime?",
+            "Can the child respond to their name when called?",
+            "Can the child match objects by color or size?",
+            "Can the child recognize and name body parts?"
+        ];
+
+        const activityContainer = document.getElementById("activities");
+        let score = 0;
+
+        // Render activity questions
+        activities.forEach((activity, index) => {
+            const activityHTML = `
+                <label>${index + 1}. ${activity}</label>
+                <label><input type="radio" name="activity${index}" value="yes"> Yes</label>
+                <label><input type="radio" name="activity${index}" value="no"> No</label>
+            `;
+            const div = document.createElement("div");
+            div.classList.add("activity");
+            div.innerHTML = activityHTML;
+            activityContainer.appendChild(div);
+        });
+
+        // Update score dynamically
+        const updateScore = () => {
+            score = 0;
+            const totalActivities = activities.length;
+            const selectedAnswers = document.querySelectorAll('input[type="radio"]:checked');
+
+            selectedAnswers.forEach(answer => {
+                if (answer.value === "yes") {
+                    score += 10; // Each "Yes" answer is worth 10 points
+                }
+            });
+
+            const percentage = (score / (totalActivities * 10)) * 100;
+            document.getElementById("score").innerText = `Current Score: ${score}`;
+            document.getElementById("percentage").innerText = `Percentage: ${percentage.toFixed(2)}%`;
+
+            // Update chart
+            updateChart(percentage);
+        };
+
+        // Attach event listeners to radio buttons
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener("change", updateScore);
+        });
+
+        // Chart.js configuration
+        const ctx = document.getElementById("percentageChart").getContext("2d");
+        const percentageChart = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels: ["Achieved (%)", "Remaining (%)"],
+                datasets: [
+                    {
+                        data: [0, 100],
+                        backgroundColor: ["#76c7c0", "#e0e0e0"],
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: "bottom"
+                    }
+                }
+            }
+        });
+
+        // Update chart dynamically
+        const updateChart = (percentage) => {
+            percentageChart.data.datasets[0].data = [percentage, 100 - percentage];
+            percentageChart.update();
+        };
+
+        // Export to PDF functionality
+        document.getElementById("exportPdfBtn").addEventListener("click", async () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const childName = document.getElementById("childName").value;
+            const dob = document.getElementById("dob").value;
+            const assessmentDate = document.getElementById("assessmentDate").value;
+            const evaluatorName = document.getElementById("evaluatorName").value;
+
+            doc.setFontSize(16);
+            doc.text("P.A.T.-C.W.C.P. Assessment Report", 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Child Name: ${childName}`, 20, 30);
+            doc.text(`D.O.B: ${dob}`, 20, 40);
+            doc.text(`Assessment Date: ${assessmentDate}`, 20, 50);
+            doc.text(`Evaluator's Name: ${evaluatorName}`, 20, 60);
+            doc.text(`Score: ${score}`, 20, 70);
+            doc.text(`Percentage: ${(score / (activities.length * 10) * 100).toFixed(2)}%`, 20, 80);
+
+            const response = await fetch('/show-assessments');
+            const assessments = await response.json();
+
+            let y = 90;
+            assessments.forEach(assessment => {
+                doc.text(`Child Name: ${assessment.childName}`, 20, y);
+                doc.text(`D.O.B: ${assessment.dob}`, 20, y + 10);
+                doc.text(`Assessment Date: ${assessment.assessmentDate}`, 20, y + 20);
+                doc.text(`Evaluator's Name: ${assessment.evaluatorName}`, 20, y + 30);
+                doc.text(`Score: ${assessment.score}`, 20, y + 40);
+                doc.text(`Percentage: ${assessment.percentage}`, 20, y + 50);
+                y += 60;
+            });
+
+            doc.save(`${childName}_assessment_report.pdf`);
+        });
+
+        // Save assessment data to server
+        document.getElementById("saveAssessmentBtn").addEventListener("click", async () => {
+            const childName = document.getElementById("childName").value;
+            const dob = document.getElementById("dob").value;
+            const assessmentDate = document.getElementById("assessmentDate").value;
+            const evaluatorName = document.getElementById("evaluatorName").value;
+            const childAge = document.getElementById("childAge").value;
+
+            const assessmentData = {
+                childName,
+                dob,
+                assessmentDate,
+                evaluatorName,
+                childAge,
+                score,
+                percentage: (score / (activities.length * 10) * 100).toFixed(2)
+            };
+
+            const response = await fetch('/save-assessment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(assessmentData)
+            });
+
+            const result = await response.json();
+            if (response.status === 200) {
+                alert(result.message);
+                console.log('Assessment saved:', assessmentData); // Log the saved assessment data
+            } else {
+                alert(result.error);
+                console.log('Error saving assessment:', result.error); // Log the error
+            }
+        });
+
+        // Check if user is authenticated
+        async function checkAuth() {
+            const response = await fetch('/check-auth');
+            if (response.status !== 200) {
+                window.location.href = '/login.html';
+            }
+        }
+
+        checkAuth();
+    </script>
+</body>
+</html>

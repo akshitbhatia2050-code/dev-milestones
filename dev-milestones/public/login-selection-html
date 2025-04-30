@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Selection</title>
+</head>
+<body>
+    <h1>Login Selection</h1>
+    <a href="/parent-login.html">Parent Login</a>
+    <br>
+    <a href="/evaluator-login.html">Evaluator Login</a>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Dashboard</title>
+</head>
+<body>
+    <h1>Parent Dashboard</h1>
+    <div id="assessments"></div>
+
+    <script>
+        async function fetchAssessments() {
+            const response = await fetch('/view-assessments');
+            const assessments = await response.json();
+
+            const assessmentsContainer = document.getElementById('assessments');
+            assessmentsContainer.innerHTML = '';
+
+            assessments.forEach(assessment => {
+                const assessmentDiv = document.createElement('div');
+                assessmentDiv.innerHTML = `
+                    <h3>Assessment for ${assessment.childName}</h3>
+                    <p>D.O.B: ${assessment.dob}</p>
+                    <p>Assessment Date: ${assessment.assessmentDate}</p>
+                    <p>Evaluator's Name: ${assessment.evaluatorName}</p>
+                    <p>Child's Age: ${assessment.childAge}</p>
+                    <p>Score: ${assessment.score}</p>
+                    <p>Percentage: ${assessment.percentage}%</p>
+                `;
+                assessmentsContainer.appendChild(assessmentDiv);
+            });
+        }
+
+        fetchAssessments();
+    </script>
+</body>
+</html>
